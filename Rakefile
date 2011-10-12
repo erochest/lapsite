@@ -42,6 +42,7 @@ task :cookbooks do
   Dir.mkdir("cookbooks") unless File.directory?("cookbooks")
   system('git clone --branch=slab https://github.com/erochest/opscode-cookbooks.git cookbooks/opscode')
   system('git clone https://github.com/scholarslab/cookbooks.git cookbooks/slab')
+  system('git clone git://github.com/erochest/cookbooks.git cookbooks/err')
 end
 
 namespace :vm do
