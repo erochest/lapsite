@@ -22,6 +22,21 @@ def vm_ssh(env, cmd)
   end
 end
 
+def createuser(env, username, passwd)
+    vm_ssh(env, "sudo su root <<SCRIPT
+sudo -u postgres createuser --superuser --createdb --createrole --pwprompt --echo #{username} << EOF
+#{passwd}
+#{passwd}
+EOF
+SCRIPT")
+end
+
+def createdb(env, username, dbname)
+  vm_ssh(env, "sudo su root <<SCRIPT
+sudo -u postgres createdb -O #{username} --echo #{dbname}
+SCRIPT")
+end
+
 desc 'Destroys and initializes the environment.'
 task :init => [:clobber,
                :cookbooks,
@@ -65,5 +80,48 @@ namespace :vm do
     raise "Must be running!" if !env.primary_vm.vm.running?
     puts "Getting chef stacktrace."
     vm_ssh(env, "cat /tmp/vagrant-chef-1/chef-stacktrace.out")
+  end
+end
+
+desc 'Runs the unittests.'
+task :test do
+  env = Vagrant::Environment.new
+  vm_ssh(env, 'PYTHONPATH=/vagrant python -m runpy lapsite.tests')
+end
+
+namespace :pg do
+
+  desc 'This configures PostgreSQL for remote logins and users.'
+  task :config do
+    puts 'Configuring PostgreSQL.'
+    env = Vagrant::Environment.new
+
+    vm_ssh(env, %{echo "listen_addresses = '*'" | sudo tee --append /etc/postgresql/8.4/main/postgresql.conf})
+    vm_ssh(env, %{echo "local   all         all                               password" | sudo tee --append /etc/postgresql/8.4/main/pg_hba.conf})
+    vm_ssh(env, %{echo "hostssl all         all         0.0.0.0/0             password" | sudo tee --append /etc/postgresql/8.4/main/pg_hba.conf})
+
+    Rake::Task['pg:restart'].invoke
+  end
+
+  desc 'This restarts PostgreSQL.'
+  task :restart do
+    puts 'Restarting PostgreSQL.'
+    env = Vagrant::Environment.new
+    vm_ssh(env, 'sudo /etc/init.d/postgresql-8.4 restart')
+  end
+
+  desc 'This creates the vagrant PostgreSQL user.'
+  task :createuser do
+    puts 'Creating vagrant and w_lap PostgreSQL users.'
+    env = Vagrant::Environment.new
+    createuser(env, 'vagrant', 'vagrant')
+    createuser(env, 'w_lap', 'w_lap')
+  end
+
+  desc 'This creates the LAP database.'
+  task :createdb do
+    puts 'Creating lap database.'
+    env = Vagrant::Environment.new
+    createdb(env, 'w_lap', 'lap')
   end
 end
