@@ -83,10 +83,18 @@ namespace :vm do
   end
 end
 
-desc 'Runs the unittests.'
-task :test do
-  env = Vagrant::Environment.new
-  vm_ssh(env, 'PYTHONPATH=/vagrant python -m runpy lapsite.tests')
+namespace :lap do
+  desc 'Runs the unittests.'
+  task :test do
+    env = Vagrant::Environment.new
+    vm_ssh(env, 'PYTHONPATH=/vagrant python -m runpy lapsite.tests')
+  end
+
+  desc 'Runs the server.'
+  task :serve do
+    env = Vagrant::Environment.new
+    vm_ssh(env, 'PYTHONPATH=/vagrant /vagrant/bin/runserver.py')
+  end
 end
 
 namespace :pg do
@@ -125,3 +133,4 @@ namespace :pg do
     createdb(env, 'w_lap', 'lap')
   end
 end
+
