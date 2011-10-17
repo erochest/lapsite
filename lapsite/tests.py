@@ -9,10 +9,11 @@ from flask import g
 import lapsite
 from lapsite import testing_config
 from lapsite.database import load_data
-from lapsite.models import Community
+from lapsite.models import (Community, FieldWorker, Informant, Project,
+                            Response, Target, WorkSheet)
 
 
-class LapSiteTestCase(unittest.TestCase):
+class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         os.environ['LAPTARGET'] = 'testing'
@@ -32,7 +33,13 @@ class LapSiteTestCase(unittest.TestCase):
     def test_db_loaded(self):
         with lapsite.app.test_client() as c:
             c.get('/')
-            assert len(g.session.query(Community).all()) == 528
+            assert g.session.query(Community).count() == 528
+            assert g.session.query(FieldWorker).count() == 0
+            assert g.session.query(Informant).count() == 1224
+            assert g.session.query(Project).count() == 2
+            assert g.session.query(Response).count() == 403879
+            assert g.session.query(Target).count() == 1028
+            assert g.session.query(WorkSheet).count() == 0
 
 
 if __name__ == '__main__':
