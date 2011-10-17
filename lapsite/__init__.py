@@ -4,10 +4,11 @@ import os
 import sys
 
 from flask import Flask, g
-from flaskext.sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
-SQLALCHEMY_DATABASE_URI = 'sqlite3:///tmp/lap.db'
+DATABASE_URI = 'sqlite:///tmp/lap.db'
 LOG_FILE = '/tmp/lap.log'
 DEBUG = False
 TESTING = False
@@ -64,41 +65,63 @@ def get_file_handler(app):
 
 
 def create_app(config_file=None):
-    global app, db
+    global app
 
     if config_file is None:
         config_file = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                '%s_config.py' % (os.environ.get('LAPTARGET', 'dev'),),
+                '%s_config.py' % (os.environ.get('LAPTARGET', 'prod'),),
                 )
 
     app = Flask(__name__)
     config_app(app, config_file)
 
     if not app.debug:
-        import logging
-
-        loggers = [
-                app.logger,
-                logging.getLogger('sqlalchemy'),
-                ]
-        handlers = [
-                get_mail_handler(app),
-                get_file_handler(app),
-                ]
-
-        # TODO: Perhaps set to write to STDERR for Heroku.
-        for logger in loggers:
-            for handler in handlers:
-                logger.addHandler(handler)
-
-    db = SQLAlchemy(app)
+        setup_logging(app)
 
     if 'lapsite.views' in sys.modules:
         reload(sys.modules['lapsite.views'])
     else:
         import lapsite.views
 
+    set_request_handlers(app)
+
     return app
 
+
+def connect_db(app):
+    app.logger.info('Connecting to %(DATABASE_URI)s.' % app.config)
+    return create_engine(app.config['DATABASE_URI'])
+
+
+def setup_logging(app):
+    import logging
+
+    loggers = [
+            app.logger,
+            logging.getLogger('sqlalchemy'),
+            ]
+    handlers = [
+            get_mail_handler(app),
+            get_file_handler(app),
+            ]
+
+    # TODO: Perhaps set to write to STDERR for Heroku.
+    for logger in loggers:
+        for handler in handlers:
+            logger.addHandler(handler)
+
+
+def set_request_handlers(app):
+    @app.before_request
+    def before_request():
+        g.db = connect_db(app)
+        Session = sessionmaker(bind=g.db)
+        g.session = Session()
+    @app.teardown_request
+    def teardown_request(exc):
+        if exc is None:
+            g.session.commit()
+        else:
+            g.session.rollback()
 

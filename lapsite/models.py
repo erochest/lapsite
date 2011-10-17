@@ -1,17 +1,23 @@
 
 
-from lapsite import db
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
 
-class Communities(db.Model):
-    comid = db.Column(db.Integer, primary_key=True)
-    projid = db.Column(db.Integer)
-    type = db.Column(db.String(1))
-    name = db.Column(db.String(30))
-    state = db.Column(db.String(2))
-    code = db.Column(db.String(10))
-    x = db.Column(db.Integer)
-    y = db.Column(db.Integer)
+Base = declarative_base()
+
+
+class Community(Base):
+    __tablename__ = 'communities'
+
+    comid = Column(Integer, primary_key=True)
+    projid = Column(Integer)
+    type = Column(String(1))
+    name = Column(String(30))
+    state = Column(String(2))
+    code = Column(String(10))
+    x = Column(Integer)
+    y = Column(Integer)
 
     def __init__(self, project, type, name, state, code, x, y):
         self.projid = project.projid
