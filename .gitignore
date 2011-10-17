@@ -3,3 +3,5 @@
 .vagrant
 cookbooks/
 *.pyc
+*.db
+data/
