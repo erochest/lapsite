@@ -27,8 +27,7 @@ class LapSiteTestCase(unittest.TestCase):
 
     def tearDown(self):
         os.close(self.db_fd)
-        # os.remove(self.db_file)
-        # self.ctx.pop()
+        os.remove(self.db_file)
 
     def test_db_loaded(self):
         with lapsite.app.test_client() as c:
