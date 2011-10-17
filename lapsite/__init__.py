@@ -20,13 +20,13 @@ def config_app(app, config_file):
     app.config.from_object(__name__)
     # One of dev_config.py, test_config.py, heroku_config.py, or
     # production_config.py.
-    if 'FLASKR_SETTINGS' in os.environ:
-        app.config.from_envvar('FLASKR_SETTINGS')
-    if os.path.exists(config_file):
-        app.config.from_pyfile(config_file)
+    if 'LAP_SETTINGS' in os.environ:
+        app.config.from_envvar('LAP_SETTINGS', silent=True)
+    app.config.from_pyfile(config_file, silent=True)
 
 
 def get_mail_handler(app):
+    import logging
     from logging.handlers import SMTPHandler
     from logging import Formatter
 
@@ -49,10 +49,11 @@ def get_mail_handler(app):
 
 
 def get_file_handler(app):
+    import logging
     from logging.handlers import RotatingFileHandler
     from logging import Formatter
 
-    file_handler = RotatingFileHandler(app.log_file,
+    file_handler = RotatingFileHandler(app.config['LOG_FILE'],
                                        maxBytes=2**20,
                                        backupCount=10)
     file_handler.setLevel(logging.WARN)

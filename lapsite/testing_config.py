@@ -4,8 +4,7 @@ import tempfile
 
 CWD = os.path.dirname(os.path.abspath(__file__))
 
-TMP_FILE_INFO = tempfile.mkstemp()
-DATA_FILE = os.path.join(CWD, 'sqlite3-data.sql')
+DATA_FILE = 'sqlite3-data.sql'
 DATABASE_URI = 'sqlite:////tmp/lap-testing.db'
 DEBUG = True
 TESTING = True

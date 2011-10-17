@@ -9,14 +9,14 @@ import lapsite
 
 
 def load_data():
-    lapsite.app.logger.info('Loading data from %(DATA_FILE)s.' %
-                            lapsite.app.config)
+    app = lapsite.app
+    app.logger.info('Loading data from %(DATA_FILE)s.' % lapsite.app.config)
 
-    cxn = g.db.connect()
+    cxn = g.db.connect() if hasattr(g, 'db') else lapsite.connect_db(app).connect()
     with closing(cxn):
         txn = cxn.begin()
         try:
-            with open(lapsite.app.config['DATA_FILE']) as f:
+            with app.open_resource(app.config['DATA_FILE']) as f:
                 buffer = ''
                 for line in f:
                     buffer += line
@@ -30,6 +30,10 @@ def load_data():
             txn.rollback()
             raise
 
-    lapsite.app.logger.info('Done loading data.')
+    app.logger.info('Done loading data.')
 
+
+if __name__ == '__main__':
+    app = lapsite.create_app()
+    load_data()
 

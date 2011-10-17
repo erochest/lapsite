@@ -16,10 +16,9 @@ from lapsite.models import (Community, FieldWorker, Informant, Project,
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        os.environ['LAPTARGET'] = 'testing'
         (self.db_fd, self.db_file) = tempfile.mkstemp()
 
-        app = lapsite.create_app()
+        app = lapsite.create_app('testing_config.py')
         app.config['DATABASE_URI'] = 'sqlite:///' + self.db_file
 
         with app.test_client() as c:
@@ -41,6 +40,11 @@ class DatabaseTestCase(unittest.TestCase):
             assert g.session.query(Target).count() == 1028
             assert g.session.query(WorkSheet).count() == 0
 
+
+class ViewTestCase(unittest.TestCase):
+
+    def setUp(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
