@@ -5,3 +5,4 @@ cookbooks/
 *.pyc
 *.db
 data/
+.secret-key
